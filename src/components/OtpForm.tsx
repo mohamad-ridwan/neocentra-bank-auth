@@ -83,28 +83,39 @@ export function OtpForm() {
     setError('');
     setLoading(true);
 
-    setTimeout(async () => {
-      if (otpCode === '123456') {
-        const token = 'mock-jwt-token-neocentra-12345';
-        localStorage.setItem('neocentra_token', token);
-        
-        try {
-          const { loginSuccess } = await import('shared_remote/store');
-          dispatch(loginSuccess({ user: tempUser, token }));
-          sessionStorage.removeItem('neocentra_temp_user');
-          router.push('/');
-        } catch (err) {
-          console.error("Gagal melakukan loginSuccess dispatch:", err);
-          setError('Terjadi kesalahan sistem saat sinkronisasi store Redux');
-        }
-      } else {
-        setError('Kode OTP salah (Gunakan kode mock: 123456)');
-        // Clear OTP inputs
-        setOtp(new Array(6).fill(''));
-        inputRefs.current[0]?.focus();
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: tempUser.username,
+          role: tempUser.role,
+          email: tempUser.email,
+          otpCode,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Verifikasi OTP gagal');
       }
+
+      const data = await response.json();
+      const { loginSuccess } = await import('shared_remote/store');
+      dispatch(loginSuccess({ user: data.user, token: null }));
+      sessionStorage.removeItem('neocentra_temp_user');
+      router.push('/');
+    } catch (err: any) {
+      console.error("Verification error:", err);
+      setError(err.message || 'Kode OTP salah (Gunakan kode mock: 123456)');
+      // Clear OTP inputs
+      setOtp(new Array(6).fill(''));
+      inputRefs.current[0]?.focus();
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   const handleResend = () => {

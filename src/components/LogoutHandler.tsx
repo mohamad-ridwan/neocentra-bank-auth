@@ -8,13 +8,19 @@ export function LogoutHandler() {
 
   useEffect(() => {
     const performLogout = async () => {
-      localStorage.removeItem("neocentra_token");
+      try {
+        await fetch("/api/auth/logout", { method: "POST" });
+      } catch (err) {
+        console.error("BFF logout request failed:", err);
+      }
+
       try {
         const { logout } = await import("shared_remote/store");
-        router.push("/login");
         dispatch(logout());
       } catch (err) {
         console.error("Gagal memanggil logout dispatch:", err);
+      } finally {
+        router.push("/login");
       }
     };
     performLogout();
