@@ -1,0 +1,31 @@
+{
+  "sharedModules": [],
+  "federatedModules": [
+    {
+      "remote": "auth_remote",
+      "entry": "static/chunks/remoteEntry.js",
+      "sharedModules": [],
+      "exposes": {
+        "./Login": [
+          "static/chunks/__federation_expose_Login.fa23d86bf23ac6cf.js"
+        ],
+        "./VerifyOtp": [
+          "static/chunks/__federation_expose_VerifyOtp.d79e9d91ec5fb827.js"
+        ],
+        "./Logout": [
+          "static/chunks/__federation_expose_Logout.f8dd59f4842c098e.js"
+        ]
+      },
+      "remoteModules": {
+        "shared_remote/store": 4143,
+        "shared_remote/Button": 7520,
+        "shared_remote/Input": 2040,
+        "shared_remote/useRemoteCSS": 7416,
+        "shared_remote/apiHelper": 5884
+      }
+    }
+  ],
+  "globalCSS": [
+    "/mf-auth/styles/auth-tailwind.css"
+  ]
+}

@@ -1,6 +1,14 @@
 const NextFederationPlugin = require("@module-federation/nextjs-mf");
 const path = require("path");
 
+const getRemoteUrl = (name, defaultLocalUrl) => {
+  if (process.env.NODE_ENV === "production") {
+    // In production, Nginx handles routing under a single domain via subpaths
+    return `${name}_remote@/mf-${name}/_next/static/chunks/remoteEntry.js`;
+  }
+  return `${name}_remote@${process.env[`NEXT_PUBLIC_REMOTE_${name.toUpperCase()}_URL`] || defaultLocalUrl}/_next/static/chunks/remoteEntry.js`;
+};
+
 module.exports = {
   reactStrictMode: true,
   experimental: {
@@ -13,8 +21,7 @@ module.exports = {
           name: "auth_remote",
           filename: "static/chunks/remoteEntry.js",
           remotes: {
-            shared_remote:
-              "shared_remote@http://localhost:3342/_next/static/chunks/remoteEntry.js",
+            shared_remote: getRemoteUrl("shared", "http://localhost:3342"),
           },
           exposes: {
             "./Login": "./src/components/login/LoginForm.tsx",
