@@ -1,6 +1,8 @@
-import React from 'react';
-import OtpForm from '../components/OtpForm';
+import React from "react";
+import OtpForm from "../components/otp/OtpForm";
 
 export default function OtpPage() {
   return <OtpForm />;
 }
+
+

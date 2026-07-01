@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "NEXT_PRIVATE_LOCAL_WEBPACK=true next dev -p 3343",
-    "build": "NEXT_PRIVATE_LOCAL_WEBPACK=true next build",
+    "build": "npx tailwindcss -i ./src/styles/shared-tailwind.css -o ./public/styles/auth-tailwind.css --minify && NEXT_PRIVATE_LOCAL_WEBPACK=true next build",
     "start": "NEXT_PRIVATE_LOCAL_WEBPACK=true next start -p 3343",
     "lint": "next lint",
     "test": "vitest",
