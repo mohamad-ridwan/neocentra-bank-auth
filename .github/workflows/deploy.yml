@@ -22,19 +22,13 @@ jobs:
           node-version: 20
 
       - name: Install Dependencies
-        run: |
-          cd neocentra-bank-auth
-          npm ci
+        run: npm ci
 
       - name: Run Lint
-        run: |
-          cd neocentra-bank-auth
-          npm run lint || echo "Lint warnings allowed"
+        run: npm run lint || echo "Lint warnings allowed"
 
       - name: Run Tests
-        run: |
-          cd neocentra-bank-auth
-          npm run test -- --run
+        run: npm run test -- --run
 
   build:
     needs: test
