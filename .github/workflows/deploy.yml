@@ -1,0 +1,99 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - feature/login
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: |
+          cd neocentra-bank-auth
+          npm ci
+
+      - name: Run Lint
+        run: |
+          cd neocentra-bank-auth
+          npm run lint || echo "Lint warnings allowed"
+
+      - name: Run Tests
+        run: |
+          cd neocentra-bank-auth
+          npm run test -- --run
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/login'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: actions/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: actions/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare Workspace Structure
+        run: |
+          mkdir -p temp_build/neocentra-bank-auth
+          find . -maxdepth 1 -not -name '.' -not -name 'temp_build' -exec cp -r {} temp_build/neocentra-bank-auth/ \;
+
+      - name: Clone Shared MFE Dependency
+        run: |
+          if [ -n "${{ secrets.GH_PAT }}" ]; then
+            git clone https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository_owner }}/neocentra-bank-shared.git temp_build/neocentra-bank-shared
+          else
+            git clone https://github.com/${{ github.repository_owner }}/neocentra-bank-shared.git temp_build/neocentra-bank-shared
+          fi
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: temp_build
+          file: temp_build/neocentra-bank-auth/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/neocentra-bank-auth:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/neocentra-bank-auth:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/login'
+    steps:
+      - name: Set up Kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Deploy to K8s
+        run: |
+          kubectl set image deployment/neocentra-mfe-auth auth-mfe=ghcr.io/${{ github.repository_owner }}/neocentra-bank-auth:${{ github.sha }} --record
+          kubectl rollout status deployment/neocentra-mfe-auth
