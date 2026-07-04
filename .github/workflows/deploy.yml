@@ -74,6 +74,7 @@ jobs:
           context: temp_build
           file: temp_build/neocentra-bank-auth/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/${{ github.repository_owner }}/neocentra-bank-auth:${{ github.sha }}
             ghcr.io/${{ github.repository_owner }}/neocentra-bank-auth:latest
@@ -82,15 +83,9 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/feature/login'
     steps:
-      - name: Set up Kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" > ~/.kube/config
-          chmod 600 ~/.kube/config
-
       - name: Deploy to K8s
         run: |
           kubectl set image deployment/neocentra-mfe-auth auth-mfe=ghcr.io/${{ github.repository_owner }}/neocentra-bank-auth:${{ github.sha }} --record
