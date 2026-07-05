@@ -108,7 +108,7 @@ export function LoginForm() {
 
         <div className="mt-6 flex items-center justify-center gap-1.5 text-[10px] text-slate-500">
           <Shield className="w-3.5 h-3.5 text-teal-500" />
-          <span>Sistem Keamanan Berlapis • Akses Terpantau</span>
+          <span>Sistem Keamanan Berlapis • Akses Terpantau v1.2</span>
         </div>
       </div>
     </div>
